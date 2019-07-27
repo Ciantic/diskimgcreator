@@ -1,0 +1,14 @@
+{
+    "name": "Disk Image Tools",
+    "context": "../",
+    "dockerFile": "Dockerfile",
+    "appPort": 9000,
+    "runArgs": [
+        "--privileged"
+    ],
+    "extensions": [
+        "ms-python.python",
+        "gruntfuggly.triggertaskonsave",
+        "stkb.rewrap"
+    ]
+}

@@ -1,0 +1,13 @@
+{
+    "editor.formatOnSave": true,
+    "editor.formatOnPaste": true,
+    "editor.formatOnType": true,
+    "triggerTaskOnSave.restart": false,
+    "triggerTaskOnSave.tasks": {
+        "tests": [
+            "**/*.py",
+            "**/*.py"
+        ]
+    },
+    "python.formatting.provider": "black"
+}
