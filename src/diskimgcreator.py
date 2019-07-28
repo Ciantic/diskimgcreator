@@ -229,6 +229,11 @@ class Partition:
         self.parted = parted
         self.fstype = fstype
 
+    def is_mountable(self):
+        if self.fstype == "linux-swap":
+            return False
+        return True
+
     def try_copy_to(self, to_dir: str):
         if os.path.isdir(self.filename):
             # Directory
@@ -299,8 +304,8 @@ class PartitionCollection:
     def get_fstypes(self):
         return list(map(lambda k: k.fstype, self._partitions))
 
-    # def copy_to_image(self, imagefile: Imagefile):
-    #     pass
+    def __iter__(self):
+        return iter(self._partitions)
 
     @classmethod
     def from_directory(cls, from_dir: str):
@@ -320,13 +325,48 @@ class PartitionCollection:
 
 class Imagefile:
     def __init__(self, filename: str):
-        self._filename = filename
+        self.filename = filename
 
     def make_empty(self, total_size: int, overwrite: bool = False):
-        _try_dd(self._filename, total_size, overwrite)
+        _try_dd(self.filename, total_size, overwrite)
 
     def partition(self, partitions: PartitionCollection):
-        _try_parted(self._filename, partitions.get_parted())
+        _try_parted(self.filename, partitions.get_parted())
+
+    def mount(
+        self,
+        partitions: PartitionCollection,
+        use_partfs=False,
+        partfs_mount_dir="/mnt/_temp_partfs",
+    ):
+        return ImagefileMounted(
+            self, partitions, use_partfs=use_partfs, partfs_mount_dir=partfs_mount_dir
+        )
+
+
+class ImagefileMounted:
+    def __init__(
+        self,
+        imagefile: Imagefile,
+        partitions: PartitionCollection,
+        use_partfs=False,
+        partfs_mount_dir="/mnt/_temp_partfs",
+    ):
+        self.imagefile = imagefile
+        self.use_partfs = use_partfs
+        self.partitions = partitions
+        self.partfs_mount_dir = partfs_mount_dir
+
+    def __enter__(self):
+        if self.use_partfs:
+            self._mount = Partfs(self.imagefile.filename, self.partfs_mount_dir)
+        else:
+            self._mount = Losetup(self.imagefile.filename)
+        self._partition_dirs = self._mount.__enter__()
+        return zip(self.partitions, self._partition_dirs)
+
+    def __exit__(self, type, value, traceback):
+        self._mount.__exit__(type, value, traceback)
 
 
 def try_create_image(
@@ -334,29 +374,25 @@ def try_create_image(
     imagefilename: str,
     overwrite: bool = False,
     use_partfs=False,
-    partfs_mount_dir="/mnt/_temp_partfs_mountdir",
-    mount_root_dir="/mnt",
+    partfs_mount_dir="/mnt/_temp_partfs",
+    mount_root_dir="/mnt/_temp_fs",
 ):
     print(f"Partitions directory: {rootdir}")
     print(f"Image file to create: {imagefilename}")
-    partitions_coll = PartitionCollection.from_directory(rootdir)
-    total_size = partitions_coll.get_total_size()
+    partitions = PartitionCollection.from_directory(rootdir)
+    total_size = partitions.get_total_size()
     imagefile = Imagefile(imagefilename)
     imagefile.make_empty(total_size, overwrite)
-    imagefile.partition(partitions_coll)
+    imagefile.partition(partitions)
 
-    if use_partfs:
-        with Partfs(imagefilename, partfs_mount_dir) as partition_dirs:
-            _try_mkfs_all(partition_dirs, partitions_coll.get_fstypes())
-            _try_mount_and_copy_all(
-                mount_root_dir, partition_dirs, partitions_coll._partitions
-            )
-    else:
-        with Losetup(imagefilename) as partition_dirs:
-            _try_mkfs_all(partition_dirs, partitions_coll.get_fstypes())
-            _try_mount_and_copy_all(
-                mount_root_dir, partition_dirs, partitions_coll._partitions
-            )
+    with imagefile.mount(
+        partitions, use_partfs=use_partfs, partfs_mount_dir=partfs_mount_dir
+    ) as partition_dirs:
+        for partition, partition_dir in partition_dirs:
+            _try_mkfs(partition_dir, partition.fstype)
+            if partition.is_mountable():
+                with Mount(partition_dir, mount_root_dir) as mntdir:
+                    partition.try_copy_to(mntdir)
 
 
 def parse_cli_arguments():
@@ -574,6 +610,7 @@ def _try_mkfs(dirname: str, fstype: str):
         "fat32": ["mkfs.fat", "-F", "32", dirname],
         "ext4": ["mkfs.ext4", "-F", dirname],
         "ext2": ["mkfs.ext2", dirname],
+        "linux-swap": ["mkswap", dirname],
     }
 
     if fstype not in cmds:
@@ -586,23 +623,6 @@ def _try_mkfs(dirname: str, fstype: str):
         print_error("Mkfs failed.")
         raise err
     print_ok("Mkfs succeeded.")
-
-
-def _try_mkfs_all(dirs: List[str], fstypes: List[str]):
-    if len(dirs) != len(fstypes):
-        raise Exception()
-
-    for i, dirname in enumerate(dirs):
-        _try_mkfs(dirname, fstypes[i])
-
-
-def _try_mount_and_copy_all(
-    mountroot: str, partition_dirs: List[str], partitions: List[Partition]
-):
-    for i, partdir in enumerate(partition_dirs):
-        partition = partitions[i]
-        with Mount(partdir, os.path.join(mountroot, f"pfs{i}")) as mntdir:
-            partition.try_copy_to(mntdir)
 
 
 if __name__ == "__main__":

@@ -19,7 +19,7 @@ ENTRYPOINT ["/diskimgcreator.py"]
 # Main development env
 FROM main
 RUN apt-get update -qq -y && apt-get -y install \
-    python3-pip
+    python3-pip git
 ENV PATH="/root/.local/bin:${PATH}"
 RUN update-alternatives --install /usr/bin/python python /usr/bin/python3  2
 RUN /usr/bin/python3 -m pip install -U pylint --user && \
