@@ -27,8 +27,8 @@ e.g.:
 Would define partition table as gpt (the default), create a 16GiB sized image
 file, where first partition ending at 8MiB and second partition ending at 16GiB.
 Beware with the permissions, especially if you use plain directory. In short
-format the first partition always starts at 1MiB for optimal alignment of
-smaller images.
+format the first partition always is bootable and starts at 1MiB for optimal
+alignment of smaller images.
 
 *Notice*: Underscores in short format are optional, you may also use spaces.
 
@@ -525,7 +525,7 @@ def _try_get_partitions_short_format(files: List[str]) -> List[Partition]:
                 table_type = "gpt"
                 if m.group("msdos"):
                     table_type = "msdos"
-                parted = f"unit s mklabel {table_type} mkpart primary {fstype} {partition_start} {partition_end}"
+                parted = f"unit s mklabel {table_type} mkpart primary {fstype} {partition_start} {partition_end} set 1 boot on"
             else:
                 parted = f"mkpart primary {fstype} {partition_start} {partition_end}"
             partitions.append(Partition(fname, parted, fstype))
@@ -561,7 +561,7 @@ def _try_parted(imagefile: str, parted: List[str]):
     print_notice("\n".join(parted))
     try:
         subprocess.run(
-            ["parted", "--script", imagefile, "--"] + parted + ["print all"], check=True
+            ["parted", "--script", imagefile, "--"] + parted + ["print"], check=True
         )
     except subprocess.CalledProcessError as err:
         print_error("Parted failed.")
