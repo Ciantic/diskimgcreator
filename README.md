@@ -36,7 +36,9 @@ e.g.:
 
 Would define partition table as gpt (the default), create a 16GiB sized image
 file, where first partition ending at 8MiB and second partition ending at 16GiB.
-Beware with the permissions, especially if you use plain directory.
+Beware with the permissions, especially if you use plain directory. In short
+format the first partition always starts at 1MiB for optimal alignment of
+smaller images.
 
 *Notice*: Underscores in short format are optional, you may also use spaces.
 
