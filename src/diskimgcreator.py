@@ -60,6 +60,20 @@ import io
 import datetime
 import textwrap
 import subprocess
+import logging
+
+
+VERBOSE = False
+
+
+def _set_verbose(val: bool):
+    global VERBOSE
+    VERBOSE = val
+
+
+def _is_verbose():
+    global VERBOSE
+    return VERBOSE
 
 
 def print_error(err: str):
@@ -69,15 +83,19 @@ def print_error(err: str):
 
 
 def print_ok(ok: str):
+    global VERBOSE
     CGREEN = "\33[32m"
     CEND = "\033[0m"
-    print(CGREEN + ok + CEND)
+    if VERBOSE:
+        print(CGREEN + ok + CEND)
 
 
 def print_notice(notice: str):
+    global VERBOSE
     CBLUE2 = "\33[94m"
     CEND = "\033[0m"
-    print(CBLUE2 + notice + CEND)
+    if VERBOSE:
+        print(CBLUE2 + notice + CEND)
 
 
 class UnknownFilesystemException(Exception):
@@ -424,7 +442,10 @@ def parse_cli_arguments():
 
 
 def main():
+    global VERBOSE
     _, args = parse_cli_arguments()
+
+    _set_verbose(args.verbose)
 
     # TODO: Something fun?
     # if sys.stdout.isatty():

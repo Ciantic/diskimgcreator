@@ -1,5 +1,9 @@
 # DiskImgMounter & DiskImgCreator 
 
+FUSE rights are required for the container, and unfortunately the SYS_ADMIN is
+required still for the FUSE rights to container. Therefore it's pretty much same
+as running with privileged rights.
+
 ## DiskImgMounter - Edit your multipartition .img files with just docker!
 
 ### Usage with Docker
@@ -14,6 +18,10 @@ Another example, adding 'foo' to the '/testfile' on first partition:
 
 `docker run --privileged --rm -v $(pwd)/temp/example03.img:/image.img ciantic/diskimgmounter -p 1 -- /bin/bash -c "echo 'foo' > /mnt/p1/testfile"`
 
+Or if you want to explore partitions one and two, interactively use `/bin/bash`:
+
+`docker run --privileged -it --rm -v $(pwd)/temp/example03.img:/image.img ciantic/diskimgmounter -p 1,2 -- /bin/bash`
+
 ## DiskImgCreator - Create .img with just docker!
 
 Partitions and copies files to img file.
@@ -24,9 +32,6 @@ This works from Windows as well as Linux, and does not require installing.
 
 `docker run --rm -v $(pwd):/disk --privileged ciantic/diskimgcreator`
 
-FUSE rights are required for the container, and unfortunately the SYS_ADMIN is
-required still for the FUSE rights to container. Therefore it's pretty much same
-as running with privileged rights.
 
 ### Usage with Python 3.7 or newer in Linux
 

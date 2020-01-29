@@ -11,7 +11,7 @@ Disk Image Mounter (.img) - Mounts the partitions in the img and executes a give
 Source code: https://github.com/Ciantic/diskimgcreator
 
 """
-from diskimgcreator import Partfs, Losetup, Mount, print_error
+from diskimgcreator import Partfs, Losetup, Mount, print_error, _set_verbose
 import uuid
 from typing import List, Optional
 from contextlib import ExitStack, contextmanager
@@ -84,6 +84,8 @@ def parse_cli_arguments():
 
 def main():
     _, args = parse_cli_arguments()
+
+    _set_verbose(args.verbose)
 
     # TODO: Something fun?
     # if sys.stdout.isatty():

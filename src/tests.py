@@ -1,8 +1,10 @@
-from diskimgcreator import try_create_image, _parse_size
+from diskimgcreator import try_create_image, _parse_size, _set_verbose
 from diskimgmounter import try_mount_image
 import unittest
 import os
 import datetime
+
+_set_verbose(True)
 
 
 class TestParseSize(unittest.TestCase):
