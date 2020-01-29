@@ -1,16 +1,24 @@
+# DiskImgMounter & DiskImgCreator 
 
+## DiskImgMounter - Edit your multipartition .img files with just docker!
 
-# DiskImgCreator - Disk Image Creator
+### Usage with Docker
+
+This works from Windows as well as Linux, and does not require installing.
+
+For example, if you want to list all files in partition 1, run this:
+
+`docker run --privileged --rm -v $(pwd)/temp/example03.img:/image.img ciantic/diskimgmounter -p 1 -- ls -la /mnt/p1`
+
+Another example, adding 'foo' to the '/testfile' on first partition:
+
+`docker run --privileged --rm -v $(pwd)/temp/example03.img:/image.img ciantic/diskimgmounter -p 1 -- /bin/bash -c "echo 'foo' > /mnt/p1/testfile"`
+
+## DiskImgCreator - Create .img with just docker!
 
 Partitions and copies files to img file.
 
-## Usage with Python 3.7 or newer in Linux
-
-Requires dd, parted, mount, umount, losetup or partfs.
-
-`diskimgcreatory.py`
-
-## Usage with docker
+### Usage with docker
 
 This works from Windows as well as Linux, and does not require installing.
 
@@ -20,13 +28,19 @@ FUSE rights are required for the container, and unfortunately the SYS_ADMIN is
 required still for the FUSE rights to container. Therefore it's pretty much same
 as running with privileged rights.
 
-## Defining partitions
+### Usage with Python 3.7 or newer in Linux
+
+Requires dd, parted, mount, umount, losetup or partfs.
+
+`diskimgcreatory.py`
+
+### Defining partitions
 
 Define partitions as directories, .tar or .tar.gz files. Then run this command
 with disk image file you want to create. You can define partitions in *short
 format* or *long format*.
 
-### Short format
+#### Short format
 
 `partitionNN[_msdos]_ENDPOS_TYPE[ .tar | .tar.gz ]`
 
@@ -42,7 +56,7 @@ alignment of smaller images.
 
 *Notice*: Underscores in short format are optional, you may also use spaces.
 
-### Long format
+#### Long format
 
 You can also define partitions in *long format*, if you want to partition like
 it's 1947:

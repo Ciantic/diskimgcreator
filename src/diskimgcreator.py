@@ -49,6 +49,7 @@ initial dd is parsed only from the first partition.
 
 """
 
+import uuid
 from typing import List, Optional
 import argparse
 import glob
@@ -441,6 +442,7 @@ def main():
             args.imagefile,
             overwrite=args.force,
             use_partfs=args.use_partfs,
+            partfs_mount_dir="/mnt/_tmp_partfs{}".format(uuid.uuid4().hex),
         )
     except ImageFileExistsException as err:
         print_error(

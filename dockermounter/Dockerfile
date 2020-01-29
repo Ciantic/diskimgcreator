@@ -11,15 +11,12 @@ RUN apt-get update -qq -y && apt-get -y install \
     libfdisk1 libfuse2 fuse \
     dosfstools parted python3
 COPY --from=partfs-build /build/partfs/build/bin/partfs /usr/local/bin/partfs
+COPY ./src/diskimgmounter.py /
+COPY ./src/diskimgcreator.py /
+RUN chmod +x /diskimgmounter.py
 WORKDIR /disk
-ENTRYPOINT ["/diskimgcreator.py"]
+ENTRYPOINT ["python3", "/diskimgmounter.py", "/image.img", "--use-partfs"]
+CMD ["--help"]
 
-# Main development env
+# Released version
 FROM main
-RUN apt-get update -qq -y && apt-get -y install \
-    python3-pip git
-ENV PATH="/root/.local/bin:${PATH}"
-RUN update-alternatives --install /usr/bin/python python /usr/bin/python3  2
-RUN /usr/bin/python3 -m pip install -U pylint --user && \
-    /usr/bin/python3 -m pip install -U black --user && \
-    /usr/bin/python3 -m pip install -U rope --user

@@ -1,4 +1,5 @@
 from diskimgcreator import try_create_image, _parse_size
+from diskimgmounter import try_mount_image
 import unittest
 import os
 import datetime
@@ -30,6 +31,12 @@ class TestCreateImage(unittest.TestCase):
         try_create_image(
             "../example03", "../temp/example03.img", overwrite=True, use_partfs=True
         )
+
+    def test_mount_image1(self):
+        with try_mount_image(
+            "../temp/example03.img", partitions=[1, 2], use_partfs=True
+        ):
+            print("Do with the mounts!")
 
 
 if __name__ == "__main__":
